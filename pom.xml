@@ -6,7 +6,7 @@
 
     <groupId>hu.meza.tools</groupId>
     <artifactId>http-client-wrapper</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1.7-SNAPSHOT</version>
     <name>HTTP Client Wrapper</name>
 
     <description>A wrapper for the http client library</description>
@@ -41,6 +41,19 @@
     </scm>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>RELEASE</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
@@ -77,7 +90,7 @@
                         <goals>
                             <goal>check</goal>
                         </goals>
-                        <phase>verify</phase>
+                        <phase>none</phase>
                     </execution>
                 </executions>
             </plugin>

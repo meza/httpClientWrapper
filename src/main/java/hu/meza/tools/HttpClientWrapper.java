@@ -9,9 +9,11 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
@@ -20,9 +22,12 @@ import java.io.UnsupportedEncodingException;
 
 public class HttpClientWrapper {
 
+	public static final int PORT = 443;
 	private HttpClient client;
 	private CookieStore cookieStore = new BasicCookieStore();
 	private HttpContext localContext = new BasicHttpContext();
+	private SchemeProvider schemeProvider = new SchemeProvider();
+	private String host = "";
 
 	public HttpClientWrapper(HttpClient client) {
 		localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
@@ -31,6 +36,18 @@ public class HttpClientWrapper {
 
 	public HttpClientWrapper() {
 		this(new DefaultHttpClient());
+	}
+
+	public void addCookie(Cookie cookie) {
+		cookieStore.addCookie(cookie);
+	}
+
+	public void setHost(String host) {
+		this.host = host;
+	}
+
+	public void dontCareAboutSSL() {
+		client.getConnectionManager().getSchemeRegistry().register(schemeProvider.trustAllScheme());
 	}
 
 	public void followRedirects() {
@@ -46,7 +63,7 @@ public class HttpClientWrapper {
 	}
 
 	public HttpCall getFrom(String url, Header[] headers) {
-		HttpUriRequest request = new HttpGet(url);
+		HttpUriRequest request = new HttpGet(constructUrl(url));
 		return doRequest(request, headers);
 	}
 
@@ -55,7 +72,7 @@ public class HttpClientWrapper {
 	}
 
 	public HttpCall postFormTo(String requestUrl, String requestBody, Header[] headers) {
-		HttpPost request = new HttpPost(requestUrl);
+		HttpPost request = new HttpPost(constructUrl(requestUrl));
 		request.addHeader("Content-Type", "application/x-www-form-urlencoded");
 		try {
 			request.setEntity(new StringEntity(requestBody));
@@ -65,13 +82,57 @@ public class HttpClientWrapper {
 		return doRequest(request, headers);
 	}
 
+	public HttpCall postTo(String requestUrl, String requestBody) {
+		return postTo(requestUrl, requestBody, new Header[]{});
+	}
+
+	public HttpCall postJsonTo(String requestUrl, String requestBody) {
+		return postTo(requestUrl, requestBody, getJsonHeaders());
+	}
+
+	public HttpCall deleteFromWithJson(String requestUrl, String requestBody) {
+		return delete(requestUrl, requestBody, getJsonHeaders());
+	}
+
+	public HttpCall delete(String requestUrl, String requestBody, Header[] headers) {
+		DeletePayload request = new DeletePayload(constructUrl(requestUrl));
+
+		try {
+			request.setEntity(new StringEntity(requestBody));
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
+		return doRequest(request, headers);
+	}
+
+	public HttpCall postTo(String requestUrl, String requestBody, Header[] headers) {
+		HttpPost request = new HttpPost(constructUrl(requestUrl));
+
+		try {
+			request.setEntity(new StringEntity(requestBody));
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
+		return doRequest(request, headers);
+	}
+
+	private Header[] getJsonHeaders() {
+		Header[] headers = {
+			new BasicHeader("Content-Type", "application/json")
+		};
+
+		return headers;
+	}
+
 	private HttpCall doRequest(HttpUriRequest request, Header[] headers) {
 		addHeadersToRequest(request, headers);
 		try {
+
 			HttpResponse response = client.execute(request, localContext);
 			return new HttpCall(response, request);
 		} catch (IOException e) {
-			String msg = String.format("Could not %s %s", request.getMethod(), request.getURI());
+			String msg = String.format("Could not %s %s\n%s", request.getMethod(), request.getURI(),
+									   e.getLocalizedMessage());
 			throw new RuntimeException(msg);
 		}
 	}
@@ -81,6 +142,13 @@ public class HttpClientWrapper {
 			Header header = headers[i];
 			request.addHeader(header);
 		}
+	}
+
+	private String constructUrl(String uri) {
+		if (host.isEmpty()) {
+			return uri;
+		}
+		return host + uri;
 	}
 
 }
