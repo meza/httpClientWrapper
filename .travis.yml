@@ -4,9 +4,10 @@ before_install: true
 script: "mvn clean install"
 after_install: "mvn deploy --settings settings.xml"
 jdk:
-- openjdk7
-- oraclejdk7
+  - openjdk7
+  - oraclejdk7
+
 env:
   global:
-  - secure: "N3cConZsm6fwWMJC7Kflq6TgYk5CTccR+1qDv9qIeyYdxzYxWprbdSzIn0gEZjYdttIrc+HJ7mfmS9KGkYs9VdJhJ/LJzGhmPa/P3v3j/gE4Kux26xBUnBLlg5X09gyHiXSBbGRpuRPQD9oxKc7GhXl5PQZIC9UWBRZ73LCMpS4="
-  - secure: "PMfRx6fHS2Bd6+/Bbqqpu6bOw9KVTe5QCUMUEvFeUnmX7aCa8LRZboFfV0/bU5eagjqeOfXIIVYzGMCF9pEGVUK2uXy/o9PcRKqGXxFLvWDdzEoWT2/9KvS3ksJbJ8EGp76sKXoZAVh4nu2qxrNfgJwAlpXQ8cvoQcYlTcJo8XY="
+    - secure: "N3cConZsm6fwWMJC7Kflq6TgYk5CTccR+1qDv9qIeyYdxzYxWprbdSzIn0gEZjYdttIrc+HJ7mfmS9KGkYs9VdJhJ/LJzGhmPa/P3v3j/gE4Kux26xBUnBLlg5X09gyHiXSBbGRpuRPQD9oxKc7GhXl5PQZIC9UWBRZ73LCMpS4="
+    - secure: "PMfRx6fHS2Bd6+/Bbqqpu6bOw9KVTe5QCUMUEvFeUnmX7aCa8LRZboFfV0/bU5eagjqeOfXIIVYzGMCF9pEGVUK2uXy/o9PcRKqGXxFLvWDdzEoWT2/9KvS3ksJbJ8EGp76sKXoZAVh4nu2qxrNfgJwAlpXQ8cvoQcYlTcJo8XY="
