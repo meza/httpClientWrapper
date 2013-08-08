@@ -1,8 +1,8 @@
 language: java
 
 before_install: true
-script: "mvn clean install"
-after_install: "mvn deploy --settings settings.xml"
+install: "mvn clean install --settings settings.xml"
+after_script: "mvn deploy --settings settings.xml"
 jdk:
   - openjdk7
   - oraclejdk7
