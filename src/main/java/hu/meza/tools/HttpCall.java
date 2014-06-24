@@ -2,7 +2,7 @@ package hu.meza.tools;
 
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
-import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 
@@ -17,11 +17,11 @@ public class HttpCall {
 		this.response = response;
 		this.request = request;
 
-		try {
-			body = new BasicResponseHandler().handleResponse(response);
-		} catch (IOException e) {
-			body = "";
-		}
+        try {
+            body = EntityUtils.toString(response.getEntity());
+        } catch (IOException e) {
+            body = "Something went wrong while getting the error response";
+        }
 	}
 
 	public HttpResponse response() {
