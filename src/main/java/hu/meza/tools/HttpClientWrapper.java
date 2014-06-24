@@ -23,45 +23,49 @@ import java.io.UnsupportedEncodingException;
 
 public class HttpClientWrapper {
 
-	public static final int PORT = 443;
-	private HttpClient client;
-	private CookieStore cookieStore = new BasicCookieStore();
-	private HttpContext localContext = new BasicHttpContext();
-	private SchemeProvider schemeProvider = new SchemeProvider();
-	private String host = "";
+    public static final int PORT = 443;
+    public static final String DEFAULT_CHARSET = "UTF-8";
+    private HttpClient client;
+    private CookieStore cookieStore = new BasicCookieStore();
+    private HttpContext localContext = new BasicHttpContext();
+    private SchemeProvider schemeProvider = new SchemeProvider();
+    private String host = "";
 
-	public HttpClientWrapper(HttpClient client) {
-		localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
-		this.client = client;
-	}
+    public HttpClientWrapper(HttpClient client) {
+        localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
+        this.client = client;
+    }
 
-	public HttpClientWrapper() {
-		this(new DefaultHttpClient());
-	}
+    public HttpClientWrapper() {
+        this(new DefaultHttpClient());
+    }
 
-	public void addCookie(Cookie cookie) {
-		cookieStore.addCookie(cookie);
-	}
+    public void addCookie(Cookie cookie) {
+        cookieStore.addCookie(cookie);
+    }
 
-	public void setHost(String host) {
-		this.host = host;
-	}
+    public void setHost(String host) {
+        this.host = host;
+    }
 
-	public void dontCareAboutSSL() {
-		client.getConnectionManager().getSchemeRegistry().register(schemeProvider.trustAllScheme());
-	}
+    public void dontCareAboutSSL() {
+        client.getConnectionManager().getSchemeRegistry().register
+                (schemeProvider.trustAllScheme());
+    }
 
-	public void followRedirects() {
-		client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, true);
-	}
+    public void followRedirects() {
+        client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS,
+                                               true);
+    }
 
-	public void doNotFollowRedirects() {
-		client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
-	}
+    public void doNotFollowRedirects() {
+        client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS,
+                                               false);
+    }
 
-	public HttpCall getFrom(String url) {
-		return getFrom(url, new Header[]{});
-	}
+    public HttpCall getFrom(String url) {
+        return getFrom(url, new Header[]{});
+    }
 
     public HttpCall getFrom(String url, String user, String pass) {
         String authStr = String.format("%s:%s", user, pass);
@@ -72,93 +76,103 @@ public class HttpClientWrapper {
         return getFrom(url, headers);
     }
 
-	public HttpCall getFrom(String url, Header[] headers) {
-		HttpUriRequest request = new HttpGet(constructUrl(url));
-		return doRequest(request, headers);
-	}
+    public HttpCall getFrom(String url, Header[] headers) {
+        HttpUriRequest request = new HttpGet(constructUrl(url));
+        return doRequest(request, headers);
+    }
 
-	public HttpCall postFormTo(String requestUrl, String requestBody) {
-		return postFormTo(requestUrl, requestBody, new Header[]{});
-	}
+    public HttpCall postFormTo(String requestUrl, String requestBody) {
+        return postFormTo(requestUrl, requestBody, new Header[]{});
+    }
 
-	public HttpCall postFormTo(String requestUrl, String requestBody, Header[] headers) {
-		HttpPost request = new HttpPost(constructUrl(requestUrl));
-		request.addHeader("Content-Type", "application/x-www-form-urlencoded");
-		try {
-			request.setEntity(new StringEntity(requestBody));
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
-		}
-		return doRequest(request, headers);
-	}
+    public HttpCall postFormTo(String requestUrl, String requestBody,
+                               Header[] headers) {
+        HttpPost request = new HttpPost(constructUrl(requestUrl));
+        request.addHeader("Content-Type", "application/x-www-form-urlencoded");
+        try {
+            request.setEntity(new StringEntity(requestBody));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+        return doRequest(request, headers);
+    }
 
-	public HttpCall postTo(String requestUrl, String requestBody) {
-		return postTo(requestUrl, requestBody, new Header[]{});
-	}
+    public HttpCall postJsonTo(String requestUrl, String requestBody) {
+        return postTo(requestUrl, requestBody, getJsonHeaders(),
+                      DEFAULT_CHARSET);
+    }
 
-	public HttpCall postJsonTo(String requestUrl, String requestBody) {
-		return postTo(requestUrl, requestBody, getJsonHeaders());
-	}
+    public HttpCall postJsonTo(String requestUrl, String requestBody, String
+            charset) {
+        return postTo(requestUrl, requestBody, getJsonHeaders(), charset);
+    }
 
-	public HttpCall deleteFromWithJson(String requestUrl, String requestBody) {
-		return delete(requestUrl, requestBody, getJsonHeaders());
-	}
+    public HttpCall postTo(String requestUrl, String requestBody) {
+        return postTo(requestUrl, requestBody, new Header[]{}, DEFAULT_CHARSET);
+    }
 
-	public HttpCall delete(String requestUrl, String requestBody, Header[] headers) {
-		DeletePayload request = new DeletePayload(constructUrl(requestUrl));
+    public HttpCall postTo(String requestUrl, String requestBody,
+                           Header[] headers, String charset) {
+        HttpPost request = new HttpPost(requestUrl);
 
-		try {
-			request.setEntity(new StringEntity(requestBody));
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
-		}
-		return doRequest(request, headers);
-	}
+        try {
+            request.setEntity(new StringEntity(requestBody, charset));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+        return doRequest(request, headers);
+    }
 
-	public HttpCall postTo(String requestUrl, String requestBody, Header[] headers) {
-		HttpPost request = new HttpPost(constructUrl(requestUrl));
+    public HttpCall deleteFromWithJson(String requestUrl, String requestBody) {
+        return delete(requestUrl, requestBody, getJsonHeaders());
+    }
 
-		try {
-			request.setEntity(new StringEntity(requestBody));
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
-		}
-		return doRequest(request, headers);
-	}
+    public HttpCall delete(String requestUrl, String requestBody,
+                           Header[] headers) {
+        DeletePayload request = new DeletePayload(constructUrl(requestUrl));
 
-	private Header[] getJsonHeaders() {
-		Header[] headers = {
-			new BasicHeader("Content-Type", "application/json")
-		};
+        try {
+            request.setEntity(new StringEntity(requestBody));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+        return doRequest(request, headers);
+    }
 
-		return headers;
-	}
+    private Header[] getJsonHeaders() {
+        Header[] headers = {
+                new BasicHeader("Content-Type", "application/json")
+        };
 
-	private HttpCall doRequest(HttpUriRequest request, Header[] headers) {
-		addHeadersToRequest(request, headers);
-		try {
+        return headers;
+    }
 
-			HttpResponse response = client.execute(request, localContext);
-			return new HttpCall(response, request);
-		} catch (IOException e) {
-			String msg = String.format("Could not %s %s\n%s", request.getMethod(), request.getURI(),
-									   e.getLocalizedMessage());
-			throw new RuntimeException(msg);
-		}
-	}
+    private HttpCall doRequest(HttpUriRequest request, Header[] headers) {
+        addHeadersToRequest(request, headers);
+        try {
 
-	private void addHeadersToRequest(HttpUriRequest request, Header[] headers) {
-		for (int i = 0; i < headers.length; i++) {
-			Header header = headers[i];
-			request.addHeader(header);
-		}
-	}
+            HttpResponse response = client.execute(request, localContext);
+            return new HttpCall(response, request);
+        } catch (IOException e) {
+            String msg = String.format("Could not %s %s\n%s",
+                                       request.getMethod(), request.getURI(),
+                                       e.getLocalizedMessage());
+            throw new RuntimeException(msg);
+        }
+    }
 
-	private String constructUrl(String uri) {
-		if (host.isEmpty()) {
-			return uri;
-		}
-		return host + uri;
-	}
+    private void addHeadersToRequest(HttpUriRequest request, Header[] headers) {
+        for (int i = 0; i < headers.length; i++) {
+            Header header = headers[i];
+            request.addHeader(header);
+        }
+    }
+
+    private String constructUrl(String uri) {
+        if (host.isEmpty()) {
+            return uri;
+        }
+        return host + uri;
+    }
 
 }
