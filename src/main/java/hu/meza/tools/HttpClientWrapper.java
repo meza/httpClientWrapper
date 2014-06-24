@@ -1,5 +1,6 @@
 package hu.meza.tools;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.CookieStore;
@@ -61,6 +62,15 @@ public class HttpClientWrapper {
 	public HttpCall getFrom(String url) {
 		return getFrom(url, new Header[]{});
 	}
+
+    public HttpCall getFrom(String url, String user, String pass) {
+        String authStr = String.format("%s:%s", user, pass);
+        String authEncoded = Base64.encodeBase64String(authStr.getBytes());
+        Header[] headers = {
+                new BasicHeader("Authorization", "Basic " + authEncoded)
+        };
+        return getFrom(url, headers);
+    }
 
 	public HttpCall getFrom(String url, Header[] headers) {
 		HttpUriRequest request = new HttpGet(constructUrl(url));
