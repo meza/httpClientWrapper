@@ -4,7 +4,7 @@
 
     <groupId>hu.meza.tools</groupId>
     <artifactId>http-client-wrapper</artifactId>
-    <version>0.1.11-SNAPSHOT</version>
+    <version>0.1.11</version>
     <name>HTTP Client Wrapper</name>
 
     <description>A wrapper for the http client library</description>
