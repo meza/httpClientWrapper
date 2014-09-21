@@ -6,6 +6,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.params.ClientPNames;
@@ -133,6 +134,19 @@ public class HttpClientWrapper {
 
         try {
             request.setEntity(new StringEntity(requestBody));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+        return doRequest(request, headers);
+    }
+
+    public HttpCall patch(String requestUrl, String requestBody,
+                          Header[] headers) {
+        HttpPatch request = new HttpPatch(constructUrl(requestBody));
+
+        try {
+            request.setEntity(new StringEntity(requestBody));
+
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
