@@ -142,7 +142,7 @@ public class HttpClientWrapper {
 
     public HttpCall patch(String requestUrl, String requestBody,
                           Header[] headers) {
-        HttpPatch request = new HttpPatch(constructUrl(requestBody));
+        HttpPatch request = new HttpPatch(constructUrl(requestUrl));
 
         try {
             request.setEntity(new StringEntity(requestBody));
