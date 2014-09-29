@@ -21,6 +21,8 @@ public class HttpCall {
             body = EntityUtils.toString(response.getEntity());
         } catch (IOException e) {
             body = "Something went wrong while getting the error response";
+        } catch (IllegalArgumentException e) {
+            body = "";
         }
 	}
 
